@@ -31,25 +31,25 @@ def fork_childProcess():
     # of the parent process but in the identicial, they are different.
     childProcess = os.fork() 
 
-    # Basic CLI command for this app:
-    # '1' for, seeing Child Process ID
-
-    # childProcess equals 0 means child process otherwise it'll be parent process
     if childProcess > 0:
+        # Wait for the process which has 0 pid
+        os.waitpid(childProcess, 0)
+    # childProcess equals 0 means child process otherwise it'll be parent process
+    elif childProcess == 0:
         print("Enter your command: ")
         command = input()
         if command == "1":
             print("Child process id is:", os.getpid()) 
         elif command == "2":
-            request_urls = [
-                "http://wiki.netseclab.mu.edu.tr/images/thumb/f/f7/MSKU-BlockchainResearchGroup.jpeg/300px-MSKU-BlockchainResearchGroup.jpeg",
-                "https://upload.wikimedia.org/wikipedia/tr/9/98/Mu%C4%9Fla_S%C4%B1tk%C4%B1_Ko%C3%A7man_%C3%9Cniversitesi_logo.png",
-                "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Hawai%27i.jpg/1024px-Hawai%27i.jpg​",
-                "http://wiki.netseclab.mu.edu.tr/images/thumb/f/f7/MSKU-BlockchainResearchGroup.jpeg/300px-MSKU-BlockchainResearchGroup.jpeg​",
-                "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Hawai%27i.jpg/1024px-Hawai%27i.jpg​"
-            ]
+            request_urls = ["http://wiki.netseclab.mu.edu.tr/images/thumb/f/f7/MSKU-BlockchainResearchGroup.jpeg/300px-MSKU-BlockchainResearchGroup.jpeg",
+  "https://upload.wikimedia.org/wikipedia/tr/9/98/Mu%C4%9Fla_S%C4%B1tk%C4%B1_Ko%C3%A7man_%C3%9Cniversitesi_logo.png",
+  "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Hawai%27i.jpg/1024px-Hawai%27i.jpg",
+  "http://wiki.netseclab.mu.edu.tr/images/thumb/f/f7/MSKU-BlockchainResearchGroup.jpeg/300px-MSKU-BlockchainResearchGroup.jpeg",
+  "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Hawai%27i.jpg/1024px-Hawai%27i.jpg"]
             for url in request_urls:
                 download_file(url)
+
+
 
 # Driver code 
 if __name__ == '__main__':
