@@ -6,6 +6,30 @@ from hashlib import md5
 
 
 #*
+#* First take images it should like -> 0: {hash:file_name format}, 1: {..}..
+#* Then control if there is duplicate hash, first send both duplicats
+#* After duplicate files just add them using increment 'nr'
+#*
+def find_duplicate(images):
+    duplicatedImages = {}
+    for key in images:
+        nr = 0
+        duplicatedImages[images[key]["hash"]] = {}
+        for i in images:
+            # Make sure to not take same file as a duplicate
+            if not i == key:
+                # If image 'key' hash is equal image 'i' hash so then
+                # There is a duplicate there, eleminate them
+                if (images[key]["hash"] == images[i]["hash"]):
+                    nr += 1
+                    if(duplicatedImages[images[key]["hash"]] == {}):
+                        duplicatedImages[images[key]["hash"]]["identical" + str(nr)] = images[i]["fileName"]
+                        duplicatedImages[images[key]["hash"]]["identical" + str(nr)] = images[key]["fileName"]
+                    else:
+                        duplicatedImages[images[key]["hash"]]["identical" + str(nr)] = images[i]["fileName"]
+    return duplicatedImages
+
+#*
 #* Take whole images then open them as a file 
 #* then read them after read, generate a unique 
 #* hash then append  to returned list
@@ -103,6 +127,21 @@ def fork_childProcess():
 
                 # Generate hash for images
                 hashList = hashinize(cwdf)
+
+                # Take whole images inside whether duplicate or not
+                images = {}
+
+                # To handle easiliy which hash represent which file
+                for index in range(len(cwdf)):
+                    images[index] = { "hash": hashList[index], "fileName": cwdf[index] } 
+
+
+                duplicated = find_duplicate(images)
+
+                #*
+                #* To find how many unique image have 
+                #* len(duplicated)
+                #*
 
 # Driver code 
 if __name__ == '__main__':
