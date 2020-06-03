@@ -5,7 +5,7 @@ import re as regex
 from hashlib import md5 
 import time # to test elapsed times..
 import multiprocessing
-
+from itertools import product
 
 #*
 #* To generate a hash to given image as a parameter
@@ -34,6 +34,11 @@ def find_duplicates(imagesList):
         index += 1
 
     return duplicates
+
+def find_duplicates_by_multiproc(h, hashes):
+    if h[0] == hashes[0]:
+        return (h[1], hashes[1])
+
 
 #*
 #* Take a parameter as files then if files has
@@ -84,6 +89,17 @@ def download_file(url, file_name=None):
     response = requests.get(url, allow_redirects=True)
     open(file_name, "wb").write(response.content)
 
+
+#*
+#* Just for printing out child process id
+#*
+def fork_childProcess_showID():
+    childProcess = os.fork()
+    if childProcess > 0:
+        os.waitpid(childProcess, 0)
+    elif childProcess == 0:
+        print("Child process id is:", os.getpid())
+
 #*
 #* Create child process which is duplicated from parent
 #*
@@ -107,21 +123,84 @@ def fork_childProcess():
                 "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Hawai%27i.jpg/1024px-Hawai%27i.jpg",
                 "http://wiki.netseclab.mu.edu.tr/images/thumb/f/f7/MSKU-BlockchainResearchGroup.jpeg/300px-MSKU-BlockchainResearchGroup.jpeg",
                 "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Hawai%27i.jpg/1024px-Hawai%27i.jpg"]
-        for url in request_urls:
-            download_file(url)
+        
+        # Downloading files
+        [download_file(url) for url in request_urls]
 
         # Current working directory files
         cwdf = os.listdir()
 
         # Take only images for current working directory files
         cwdf = filter_files(cwdf)
-        find_duplicates(cwdf)
+        
+        # To find duplicate files
+        duplicates = find_duplicates(cwdf)
+
+        [print(i) for i in duplicates]
 
         end = time.perf_counter()
         print("Elapsed time with serial threading is: {}".format(round(end-start,2)))
 
+def fork_childProcess_by_multiproc():
+    childProcess = os.fork() 
+
+    if childProcess > 0:
+        os.waitpid(childProcess, 0)
+
+    elif childProcess == 0:
+        start = time.perf_counter()
+
+        processPool = multiprocessing.Pool()
+
+        request_urls = [
+                "http://wiki.netseclab.mu.edu.tr/images/thumb/f/f7/MSKU-BlockchainResearchGroup.jpeg/300px-MSKU-BlockchainResearchGroup.jpeg",
+                "https://upload.wikimedia.org/wikipedia/tr/9/98/Mu%C4%9Fla_S%C4%B1tk%C4%B1_Ko%C3%A7man_%C3%9Cniversitesi_logo.png",
+                "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Hawai%27i.jpg/1024px-Hawai%27i.jpg",
+                "http://wiki.netseclab.mu.edu.tr/images/thumb/f/f7/MSKU-BlockchainResearchGroup.jpeg/300px-MSKU-BlockchainResearchGroup.jpeg",
+                "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Hawai%27i.jpg/1024px-Hawai%27i.jpg"]
+
+        processPool.map(download_file, request_urls)
+
+        cwdf = os.listdir()
+        cwdf = filter_files(cwdf)
+
+        # List comphresion shorthand:
+        # hashes = []
+        # for h in cdwd:
+        #   hashes.append(hashinize(h))
+        hashes = [ (hashinize(h), h) for h in cwdf ]
+
+        # Using buffered mapping function to determine which files duplicate        
+        duplicateRaw = processPool.starmap(find_duplicates_by_multiproc, product(hashes, repeat=2) )
+
+        # This is just for filtering to duplicate tuples from their duplicate :)
+        duplicateFiltered = []
+        for i in duplicateRaw:
+            if i != None:
+                if i[0] != i[1] and i[1]:
+                    if i[0] not in duplicateFiltered:
+                        duplicateFiltered.append(i[0])
+                    elif i[1] not in duplicateFiltered:
+                        duplicateFiltered.append(i[1])
+
+        # Printing duplicate images...
+        [print(i) for i in duplicateFiltered]
+
+        end = time.perf_counter()
+        print(f"Elapsed time with serial threading is: {round(end-start,2)}\n")
+
 # Driver code 
 if __name__ == '__main__':
-    fork_childProcess()
-
+    control = True
+    while control:
+        print("\nCommands:\n1 -> Create child process then show process id\n2 -> Download images then find duplicate ones\n3 -> Do second command using multiprocessing\n0 -> Quit")
+        command = input()
+        if command == "0":
+            control = False
+        elif command == "1":
+            fork_childProcess_showID()
+        elif command == "2":
+            fork_childProcess()
+        elif command == "3":
+            fork_childProcess_by_multiproc()
 
