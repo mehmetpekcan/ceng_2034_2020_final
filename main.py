@@ -8,6 +8,16 @@ import multiprocessing
 from itertools import product
 
 #*
+#* In the project there are two types of duplicate finder function
+#* Difference between them is the way how they find, one of them 
+#* finds using serial threading the other one finds using multiprocessing.
+#* 
+#* One more different is, the homework assignment was not clear 
+#* do we find duplicate pair or just duplicate files? So i made
+#* both of them.
+#*
+
+#*
 #* To generate a hash to given image as a parameter
 #*
 def hashinize(image):
@@ -35,6 +45,10 @@ def find_duplicates(imagesList):
 
     return duplicates
 
+#*
+#* h[0], hashes[0] => file hash number 
+#* h[1], hashes[1] => file name
+#*
 def find_duplicates_by_multiproc(h, hashes):
     if h[0] == hashes[0]:
         return (h[1], hashes[1])
