@@ -3,43 +3,37 @@ import requests
 import uuid
 import re as regex
 from hashlib import md5 
+import time # to test elapsed times..
+import multiprocessing
 
 
 #*
-#* First take images it should like -> 0: {hash:file_name format}, 1: {..}..
-#* Then control if there is duplicate hash, first send both duplicats
-#* After duplicate files just add them using increment 'nr'
+#* To generate a hash to given image as a parameter
 #*
-def find_duplicate(images):
-    duplicatedImages = {}
-    for key in images:
-        nr = 0
-        duplicatedImages[images[key]["hash"]] = {}
-        for i in images:
-            # Make sure to not take same file as a duplicate
-            if not i == key:
-                # If image 'key' hash is equal image 'i' hash so then
-                # There is a duplicate there, eleminate them
-                if (images[key]["hash"] == images[i]["hash"]):
-                    nr += 1
-                    if(duplicatedImages[images[key]["hash"]] == {}):
-                        duplicatedImages[images[key]["hash"]]["identical" + str(nr)] = images[i]["fileName"]
-                        duplicatedImages[images[key]["hash"]]["identical" + str(nr)] = images[key]["fileName"]
-                    else:
-                        duplicatedImages[images[key]["hash"]]["identical" + str(nr)] = images[i]["fileName"]
-    return duplicatedImages
+def hashinize(image):
+    with open(image, "rb") as imageFile:
+        imageHash = md5(imageFile.read()).hexdigest()
+    return imageHash
 
 #*
-#* Take whole images then open them as a file 
-#* then read them after read, generate a unique 
-#* hash then append  to returned list
-#*
-def hashinize(images):
-    hashList  = []
-    for image in images:
-        with open(image, "rb") as image:
-            hashList.append(md5(image.read()).hexdigest())
-    return hashList
+#* If hash is unique means that there is no duplicate since
+#* but if there is copy of hash in hashes objects, means that
+#* there is duplicae append them to duplicates list to detect
+#* 
+def find_duplicates(imagesList):
+    duplicates = []
+    hashes = {}
+
+    index = 0
+    for image in imagesList:
+        imageHash = hashinize(image)
+        if(imageHash not in hashes):
+            hashes[imageHash] = index
+        else:
+            duplicates.append((index, hashes[imageHash]))
+        index += 1
+
+    return duplicates
 
 #*
 #* Take a parameter as files then if files has
@@ -90,7 +84,6 @@ def download_file(url, file_name=None):
     response = requests.get(url, allow_redirects=True)
     open(file_name, "wb").write(response.content)
 
-
 #*
 #* Create child process which is duplicated from parent
 #*
@@ -104,44 +97,28 @@ def fork_childProcess():
         os.waitpid(childProcess, 0)
     # childProcess equals 0 means child process otherwise it'll be parent process
     elif childProcess == 0:
-        command = 1
-        while(command != "0"):
-            print("\n1 -> Show process id\n2 -> Download Images\n3 -> Find duplicate images\n0 -> Exit\n")
-            command = input()
-            if command == "1":
-                print("Child process id is: {}\n".format(os.getpid())) 
-            elif command == "2":
-                request_urls = ["http://wiki.netseclab.mu.edu.tr/images/thumb/f/f7/MSKU-BlockchainResearchGroup.jpeg/300px-MSKU-BlockchainResearchGroup.jpeg",
-    "https://upload.wikimedia.org/wikipedia/tr/9/98/Mu%C4%9Fla_S%C4%B1tk%C4%B1_Ko%C3%A7man_%C3%9Cniversitesi_logo.png",
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Hawai%27i.jpg/1024px-Hawai%27i.jpg",
-    "http://wiki.netseclab.mu.edu.tr/images/thumb/f/f7/MSKU-BlockchainResearchGroup.jpeg/300px-MSKU-BlockchainResearchGroup.jpeg",
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Hawai%27i.jpg/1024px-Hawai%27i.jpg"]
-                for url in request_urls:
-                    download_file(url)
-            elif command == "3":
-                # Current working directory files
-                cwdf = os.listdir()
+        start = time.perf_counter()
 
-                # Take only images for current working directory files
-                cwdf = filter_files(cwdf)
+        print("\nChild process id is: {}\n".format(os.getpid())) 
 
-                # Generate hash for images
-                hashList = hashinize(cwdf)
+        request_urls = [
+                "http://wiki.netseclab.mu.edu.tr/images/thumb/f/f7/MSKU-BlockchainResearchGroup.jpeg/300px-MSKU-BlockchainResearchGroup.jpeg",
+                "https://upload.wikimedia.org/wikipedia/tr/9/98/Mu%C4%9Fla_S%C4%B1tk%C4%B1_Ko%C3%A7man_%C3%9Cniversitesi_logo.png",
+                "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Hawai%27i.jpg/1024px-Hawai%27i.jpg",
+                "http://wiki.netseclab.mu.edu.tr/images/thumb/f/f7/MSKU-BlockchainResearchGroup.jpeg/300px-MSKU-BlockchainResearchGroup.jpeg",
+                "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Hawai%27i.jpg/1024px-Hawai%27i.jpg"]
+        for url in request_urls:
+            download_file(url)
 
-                # Take whole images inside whether duplicate or not
-                images = {}
+        # Current working directory files
+        cwdf = os.listdir()
 
-                # To handle easiliy which hash represent which file
-                for index in range(len(cwdf)):
-                    images[index] = { "hash": hashList[index], "fileName": cwdf[index] } 
+        # Take only images for current working directory files
+        cwdf = filter_files(cwdf)
+        find_duplicates(cwdf)
 
-
-                duplicated = find_duplicate(images)
-
-                #*
-                #* To find how many unique image have 
-                #* len(duplicated)
-                #*
+        end = time.perf_counter()
+        print("Elapsed time with serial threading is: {}".format(round(end-start,2)))
 
 # Driver code 
 if __name__ == '__main__':
