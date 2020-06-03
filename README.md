@@ -7,7 +7,7 @@ Script has `HTTP Request` `Multiprocessing` `Pool` `Hash`...
 In the script, you can dinamically download images from url using `HTTP Get request`
 and it shows you if there is duplicate images.
 
-**__For more, please visit documentation: https://mehmetpekcannn.gitbook.io/ceng2034__**
+**__For more, please visit documentation: https://mehmetpekcan.gitbook.io/ceng2034__**
 
 - Author: Mehmet Pekcan
 - Licence: MIT
