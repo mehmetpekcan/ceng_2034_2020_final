@@ -1,3 +1,10 @@
+#*
+#* Mehmet Pekcan
+#* 170709038
+#* For more detail check documentation:
+#* https://mehmetpekcan.gitbook.io/ceng2034/
+#*
+
 import os
 import requests 
 import uuid
@@ -151,7 +158,7 @@ def fork_childProcess():
 
         end = time.perf_counter()
         print("Elapsed time with serial threading is: {}".format(round(end-start,2)))
-        
+
         [print(i) for i in duplicates]
 
 def fork_childProcess_by_multiproc():
