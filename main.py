@@ -129,8 +129,6 @@ def fork_childProcess():
     elif childProcess == 0:
         start = time.perf_counter()
 
-        print("\nChild process id is: {}\n".format(os.getpid())) 
-
         request_urls = [
                 "http://wiki.netseclab.mu.edu.tr/images/thumb/f/f7/MSKU-BlockchainResearchGroup.jpeg/300px-MSKU-BlockchainResearchGroup.jpeg",
                 "https://upload.wikimedia.org/wikipedia/tr/9/98/Mu%C4%9Fla_S%C4%B1tk%C4%B1_Ko%C3%A7man_%C3%9Cniversitesi_logo.png",
@@ -150,10 +148,11 @@ def fork_childProcess():
         # To find duplicate files
         duplicates = find_duplicates(cwdf)
 
-        [print(i) for i in duplicates]
 
         end = time.perf_counter()
         print("Elapsed time with serial threading is: {}".format(round(end-start,2)))
+        
+        [print(i) for i in duplicates]
 
 def fork_childProcess_by_multiproc():
     childProcess = os.fork() 
@@ -197,11 +196,11 @@ def fork_childProcess_by_multiproc():
                     elif i[1] not in duplicateFiltered:
                         duplicateFiltered.append(i[1])
 
+        end = time.perf_counter()
+        print(f"Elapsed time with multiprocessing is: {round(end-start,2)}\n")
+
         # Printing duplicate images...
         [print(i) for i in duplicateFiltered]
-
-        end = time.perf_counter()
-        print(f"Elapsed time with serial threading is: {round(end-start,2)}\n")
 
 # Driver code 
 if __name__ == '__main__':
